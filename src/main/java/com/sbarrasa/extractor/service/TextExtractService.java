@@ -1,45 +1,29 @@
 package com.sbarrasa.extractor.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
+import org.apache.tika.Tika;
+import org.apache.tika.exception.TikaException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @Service
-@RequiredArgsConstructor
-@Log
 public class TextExtractService {
 
+    private final Tika tika = new Tika();
 
     public String extract(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty())
-            throw new IOException("No se ha recibido ningún archivo o el archivo está vacío");
+        if (file == null)
+            throw new IOException("No se ha recibido ningún archivo");
 
-        var contentType = file.getContentType();
-        log.info("Processing file: %s, content type: %s, size: %s bytes"
-                        .formatted(
-                                file.getOriginalFilename(),
-                                contentType,
-                                file.getSize())
-        );
+        if (file.isEmpty())
+            throw new IOException("El archivo está vacío");
 
-        if (contentType != null
-        && contentType.startsWith("image/"))
-            return extractImageText(file);
-
-        return extractTextFile(file);
+        try (InputStream input = file.getInputStream()) {
+            return tika.parseToString(input);
+        } catch (TikaException e) {
+            throw new IOException("Error extrayendo texto del archivo", e);
+        }
     }
-
-    private String extractTextFile(MultipartFile file) {
-        log.info("Processing image file");
-        return "Extracted text from image";
-    }
-
-    private String extractImageText(MultipartFile file) {
-        log.info("Processing document file");
-        return "This is a test document";
-    }
-
 }
