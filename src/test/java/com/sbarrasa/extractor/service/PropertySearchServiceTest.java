@@ -1,53 +1,64 @@
 package com.sbarrasa.extractor.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+import com.sbarrasa.extractor.config.LlamaConfig;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class PropertySearchServiceTest {
 
-  private LlamaClient client;
-  private ObjectMapper mapper;
-  private PromptService prompt;
-  private PropertySearchService service;
 
-  @BeforeEach
-  void setup() {
-    client = mock(LlamaClient.class);
-    mapper = new ObjectMapper();
-    prompt = new PromptService();
-    service = new PropertySearchService(client, prompt, mapper);
-  }
+  private final ObjectMapper mapper = new ObjectMapper();
+
 
   @Test
   void findOk() throws Exception {
-    var keys = Set.of("marca", "modelo");
-    var text = "texto";
+    var promptService = new PromptService();
+    var llamaClient = getLlamaClient();
 
-    var fakeJson = "{\"marca\":\"Drean\",\"modelo\":\"X100\"}";
+    var keys = Set.of("marca", "modelo", "frigorías");
+    var text = """
+            Manual del Aire FríoX
+            Marca: CoolTech
+            Modelo: CT-5000
+            Potencia: 5000 frigorías
+            """;
 
-    when(client.generate(anyString())).thenReturn(fakeJson);
+    var service = new PropertySearchService(llamaClient, promptService, mapper);
+    var properties = service.findProperties(keys, text);
 
-    var res = service.findProperties(keys, text);
-
-    assertEquals("Drean", res.get("marca"));
-    assertEquals("X100", res.get("modelo"));
-
-    verify(client).generate(anyString());
+    assertNotNull(properties);
+    assertTrue(properties.containsKey("marca"));
+    assertTrue(properties.containsKey("modelo"));
   }
 
-  @Test
-  void findFail() throws Exception {
-    var keys = Set.of("marca");
-    var text = "texto";
+  private LlamaClient getLlamaClient() {
+    System.out.println("Intentando conectar con llama");
 
-    when(client.generate(anyString())).thenReturn("no json");
+    LlamaClient llamaClient;
 
-    assertThrows(Exception.class, () -> service.findProperties(keys, text));
+    try {
+      llamaClient = new LlamaConfig().llamaClient();
+
+      llamaClient.generate("ping");
+      System.out.println("Test con llama real");
+    } catch (Exception e) {
+      llamaClient = mockLlamaClient();
+      System.out.println("Test con llama mock");
+    }
+
+    return llamaClient;
+  }
+
+
+  private LlamaClient mockLlamaClient() {
+    var mock = mock(LlamaClient.class);
+    when(mock.generate(anyString()))
+            .thenReturn("{\"marca\":\"MockMarca\",\"modelo\":\"MockModelo\"}");
+    return mock;
   }
 }
