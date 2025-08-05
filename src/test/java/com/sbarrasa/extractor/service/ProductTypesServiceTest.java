@@ -10,12 +10,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ProductTypesServiceTest {
 
-    private ProductTypesService productTypesService;
+    private ProductTypesService productTypesService = new ProductTypesService(
+        Set.of(
+            new ProductType(1, "Book", Set.of("title", "author", "isbn")),
+            new ProductType(2, "Electronics", Set.of("brand", "model", "warranty")),
+            new ProductType(3, "Clothing", Set.of("size", "color", "material"))
+        )
+    );
 
 
     @Test
     void testGetAll() {
-        var result = ProductTypesService.getAll();
+        var result = productTypesService.getProductTypes();
         
         assertNotNull(result);
         assertEquals(3, result.size());
@@ -24,34 +30,23 @@ class ProductTypesServiceTest {
 
     @Test
     void testGet_ValidProductTypeId() {
-        var bookProperties = ProductTypesService.get(1);
-        Set<String> electronicsProperties = productTypesService.get(2);
-        Set<String> clothingProperties = productTypesService.get(3);
-        
-        // Then
-        assertEquals(Set.of("title", "author", "isbn"), bookProperties);
-        assertEquals(Set.of("brand", "model", "warranty"), electronicsProperties);
-        assertEquals(Set.of("size", "color", "material"), clothingProperties);
+        var productType1 = productTypesService.get(1).getPropertyKeys();
+        var productType2 = productTypesService.get(2).getPropertyKeys();
+
+        assertEquals(Set.of("title", "author", "isbn"), productType1 );
+        assertEquals(Set.of("brand", "model", "warranty"), productType2);
     }
 
     @Test
     void testGet_InvalidProductTypeId() {
-        // When & Then
-        RuntimeException exception = assertThrows(
+        var id = 999;
+        var exception = assertThrows(
             RuntimeException.class,
-            () -> productTypesService.get(999)
+            () -> productTypesService.get(id)
         );
         
-        assertEquals("No hay un producto con Id: 999", exception.getMessage());
+        assertEquals("No hay un producto con Id: "+id, exception.getMessage());
     }
 
-    @Test
-    void testProductTypesInitializedOnlyOnce() {
-        // When
-        Set<ProductType> firstCall = productTypesService.getAll();
-        Set<ProductType> secondCall = productTypesService.getAll();
-        
-        // Then
-        assertSame(firstCall, secondCall, "The same instance should be returned on subsequent calls");
-    }
+
 }

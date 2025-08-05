@@ -2,7 +2,6 @@ package com.sbarrasa.extractor.service;
 
 import com.sbarrasa.extractor.entity.ProductType;
 import lombok.Data;
-import lombok.Getter;
 import lombok.extern.java.Log;
 import org.springframework.stereotype.Service;
 
@@ -16,21 +15,12 @@ public class ProductTypesService {
 
     private final Set<ProductType> productTypes;
 
+    public ProductTypesService(Set<ProductType> productTypes) {
+        this.productTypes = productTypes != null ? productTypes : new HashSet<>();
+    }
+
     public ProductTypesService() {
-       this.productTypes = new HashSet<>(defaultProductTypes());
-    }
-
-    public Set<String> getPropertyKeys(Integer productTypeId) {
-       return get(productTypeId).getPropertyKeys();
-    }
-
-    public ProductType get(String productName) {
-        return productTypes
-                .stream()
-                .filter(pt -> pt.getName().equals(productName))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No hay un producto con nombre: %s".formatted(productName)));
-
+       this(defaultProductTypes());
     }
 
     public ProductType get(Integer productTypeId) {
