@@ -1,53 +1,45 @@
 package com.sbarrasa.extractor.controller;
 
-import com.sbarrasa.extractor.dto.TextExtractionResponse;
-import com.sbarrasa.extractor.service.PropsExtractService;
+import com.sbarrasa.extractor.service.ProductTypesService;
+import com.sbarrasa.extractor.service.PropertySearchService;
+import com.sbarrasa.extractor.service.TextExtractService;
+import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/attributes")
 public class PropsExtractController {
-    
-    private static final Logger log = LoggerFactory.getLogger(PropsExtractController.class);
-    
-    private final PropsExtractService propsExtractService;
+
+
+    private final TextExtractService textExtractService;
+    private final ProductTypesService productTypesService;
+    private final PropertySearchService propertySearchService;
 
     @Autowired
-    public PropsExtractController(PropsExtractService propsExtractService) {
-        this.propsExtractService = propsExtractService;
+    public PropsExtractController(TextExtractService textExtractService,
+                                 ProductTypesService productTypesService,
+                                 PropertySearchService propertySearchService) {
+        this.textExtractService = textExtractService;
+        this.productTypesService = productTypesService;
+        this.propertySearchService = propertySearchService;
     }
 
-    @PostMapping(value = "/extract-text", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<TextExtractionResponse> extractText(
-            @RequestParam("file") MultipartFile file) {
-        
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(
-                new TextExtractionResponse("Error: No se ha subido ningún archivo", null));
-        }
-        
-        try {
-            log.info("Received file: {}, size: {} bytes, content-type: {}", 
-                    file.getOriginalFilename(), file.getSize(), file.getContentType());
-            
-            String extractedText = propsExtractService.extractText(file);
-            
-            return ResponseEntity.ok(new TextExtractionResponse("Texto extraído con éxito", extractedText));
-        } catch (IOException e) {
-            log.error("Error processing file: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().body(
-                new TextExtractionResponse("Error al procesar el archivo: " + e.getMessage(), null));
-        }
+    @PostMapping(value = "/properties/{productTypeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Map<String, Object> extractProperties(
+            @PathVariable("productTypeId") Integer productTypeId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        var propertyKeys = productTypesService.get(productTypeId).getPropertyKeys();
+        var extractedText = textExtractService.extract(file);
+        return propertySearchService.findProperties(propertyKeys, extractedText);
     }
+
 }

@@ -10,9 +10,9 @@ import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
-public class PropsExtractService {
-    
-    private static final Logger log = LoggerFactory.getLogger(PropsExtractService.class);
+public class TextExtractService {
+
+    private static final Logger log = LoggerFactory.getLogger(TextExtractService.class);
 
     /**
      * Extracts text from a file. This implementation is simplified for the test environment.
@@ -22,15 +22,15 @@ public class PropsExtractService {
      * @return The extracted text
      * @throws IOException If there's an error processing the file
      */
-    public String extractText(MultipartFile file) throws IOException {
+    public String extract(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IOException("No se ha proporcionado ningún archivo");
         }
-        
+
         String contentType = file.getContentType();
-        log.info("Processing file: {}, content type: {}, size: {} bytes", 
+        log.info("Processing file: {}, content type: {}, size: {} bytes",
                 file.getOriginalFilename(), contentType, file.getSize());
-        
+
         try {
             if (contentType != null
             && contentType.startsWith("image/")) {
