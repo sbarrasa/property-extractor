@@ -1,5 +1,6 @@
 package com.sbarrasa.extractor.service;
 
+import lombok.extern.java.Log;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -9,10 +10,10 @@ import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Log
 public class TextExtractServiceTest {
 
   private final TextExtractService service = new TextExtractService();
-  private int cntChars = 100;
 
   @Test
   void testExtractAllFiles() throws Exception {
@@ -26,7 +27,9 @@ public class TextExtractServiceTest {
       var file = new MockMultipartFile("file", res.getFilename(), "application/octet-stream", is);
       String text = service.extract(file);
       assertNotNull(text);
-      System.out.printf("%s (first %d chars): %s%n", res.getFilename(), cntChars, firstN(text, cntChars));
+      int cntChars = 100;
+      log.info("%s (first %d chars): %s%n"
+              .formatted(res.getFilename(), cntChars, firstN(text, cntChars)));
     }
   }
 
