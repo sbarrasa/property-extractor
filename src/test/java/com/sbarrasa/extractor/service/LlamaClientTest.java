@@ -1,5 +1,6 @@
 package com.sbarrasa.extractor.service;
 
+import com.sbarrasa.extractor.service.llama.LlamaClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

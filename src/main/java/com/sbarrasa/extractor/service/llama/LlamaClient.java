@@ -1,4 +1,4 @@
-package com.sbarrasa.extractor.service;
+package com.sbarrasa.extractor.service.llama;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -6,8 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Map;
 
 @Component
 public class LlamaClient {
@@ -21,15 +19,11 @@ public class LlamaClient {
   }
 
   public String generate(String prompt) {
-    var requestBody = Map.of(
-            "model", model,
-            "prompt", prompt,
-            "stream", false
-    );
+    var requestBody = new LlamaRequest(model, prompt);
 
     var request = new HttpEntity<>(requestBody);
 
-    var response = llamaRestTemplate.postForEntity("/generate", request, String.class);
+    var response = llamaRestTemplate.postForEntity("/generate", request, LlamaResponse.class);
     var responseBody = response.getBody();
 
     if (!response.getStatusCode().is2xxSuccessful())
@@ -37,6 +31,7 @@ public class LlamaClient {
               + response.getStatusCode()
               + "\n" + responseBody);
 
-    return responseBody;
+    return responseBody.getResponse();
   }
+
 }
